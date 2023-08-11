@@ -1,0 +1,44 @@
+version: "3.9"
+services:
+  ###############################################################################
+  # Jenkins for CI/CD
+  ###############################################################################
+  jenkins:
+    container_name: codeconnect-jenkins
+    image: jenkins/jenkins:lts
+    privileged: true
+    user: root
+    ports:
+      - 8080:8080
+      - 50003:50000
+    depends_on:
+      - proxy
+    volumes:
+      - ${CODECONNECT_DATA}/jenkins:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      codeconnect-public:
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          # Make the traefik service run only on the node with this label
+          # as the node with it has the volume for the certificates
+          - node.labels.codeconnect_jenkins == true
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.jenkins-http.rule=Host(`${JENKINS_DOMAIN}`)"
+        - "traefik.http.routers.jenkins-http.entrypoints=web"
+        - "traefik.http.routers.jenkins-http.middlewares=https-redirect"
+        - "traefik.http.routers.jenkins.entrypoints=websecure"
+        - "traefik.http.routers.jenkins.rule=Host(`${JENKINS_DOMAIN}`)"
+        - "traefik.http.routers.jenkins.tls=${SSL_SECURE}"
+        - "traefik.http.services.jenkins.loadbalancer.server.port=8080"
+
+###############################################################################
+# Networks
+###############################################################################
+networks:
+  codeconnect-public:
+    external: true

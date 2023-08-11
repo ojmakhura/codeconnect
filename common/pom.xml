@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>bw.co.bitri</groupId>
+		<artifactId>codeconnect-parent</artifactId>
+		<version>0.0.1</version>
+	</parent>
+	<groupId>bw.co.bitri</groupId>
+	<artifactId>codeconnect-common</artifactId>
+	<!-- <version>0.0.1-SNAPSHOT</version> -->
+	<name>Code Connect Common Module</name>
+	<description>Module to be used by all other modules. It mainly contains DTOs</description>
+	<packaging>jar</packaging>
+
+	<build>
+		<plugins>
+			<plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+		</plugins>
+	</build>
+
+</project>

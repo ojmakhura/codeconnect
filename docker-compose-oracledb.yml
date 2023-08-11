@@ -1,0 +1,41 @@
+version: "3.9"
+services:
+  ###############################################################################
+  # Postgres database
+  ###############################################################################
+  oracle-db:
+    image: container-registry.oracle.com/database/free:latest
+    # volumes:
+      # - ${CODECONNECT_DATA}/oracle-db/oradata:/opt/oracle/oradata
+    environment:
+      ORACLE_PWD: ${ORACLE_PASSWORD}
+      TZ: Africa/Gaborone
+    # healthcheck:
+    #   test: ["CMD", "/opt/bitnami/postgresql/bin/pg_isready", "--username=postgres"]
+    #   interval: 5s
+    #   timeout: 5s
+    #   retries: 5
+    networks:
+      codeconnect-public:
+    deploy:
+      placement:
+        constraints:
+          # Make the traefik service run only on the node with this label
+          # as the node with it has the volume for the certificates
+          - node.labels.codeconnect_oracle_db == true
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=codeconnect-public"
+        - "traefik.constraint-label=codeconnect-public"
+        - "traefik.tcp.routers.codeconnect-oracle-db.rule=HostSNI(`*`)"
+        - "traefik.tcp.routers.codeconnect-oracle-db.entrypoints=oracle-db"
+        # - "traefik.tcp.routers.codeconnect-oracle-db.service=oracle-db"
+        # - "traefik.tcp.routers.codeconnect-db-postgres.tls.certresolver=le"
+        - "traefik.tcp.services.codeconnect-oracle-db.loadbalancer.server.port=1521"
+
+###############################################################################
+# Networks
+###############################################################################
+networks:
+  codeconnect-public:
+    external: true

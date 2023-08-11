@@ -1,0 +1,40 @@
+version: "3.9"
+services:
+  registry: 
+    image: registry:2
+    volumes:
+      - ${CODECONNECT_DATA}/registry/data:/var/lib/registry
+      - ${CODECONNECT_DATA}/registry/certs:${CODECONNECT_DATA}/registry/certs
+      - ${CODECONNECT_DATA}/auth:${CODECONNECT_DATA}/registry/auth
+    environment:
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_PATH: ${CODECONNECT_DATA}/registry/auth/system_passwd
+      REGISTRY_AUTH_HTPASSWD_REALM: registry-realm
+    networks:
+      codeconnect-public:
+    deploy:
+      placement:
+        constraints:
+          # Make the traefik service run only on the node with this label
+          # as the node with it has the volume for the certificates
+          - node.labels.codeconnect_registry == true
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=codeconnect-public"
+        - "traefik.constraint-label=codeconnect-public"
+        - "traefik.http.routers.registry-http.rule=Host(`${REGISTRY_DOMAIN}`)"
+        - "traefik.http.routers.registry-http.entrypoints=${WEB_ENTRY}"
+        - "traefik.http.routers.registry-http.middlewares=https-redirect"
+        - "traefik.http.routers.registry-https.entrypoints=${WEBSECURE_ENTRY}"
+        - "traefik.http.routers.registry-https.rule=Host(`${REGISTRY_DOMAIN}`)"
+        - "traefik.http.routers.registry-https.tls=${SSL_SECURE}"
+        - "traefik.http.routers.registry-https.tls.certresolver=le"
+        - "traefik.http.services.registry.loadbalancer.server.port=5000"
+###############################################################################
+# Networks
+###############################################################################
+networks:
+  codeconnect-public:
+    external: true
+

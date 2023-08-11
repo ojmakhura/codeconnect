@@ -1,0 +1,38 @@
+version: "3.9"
+services:
+  ###############################################################################
+  # MS SQL 2019 Server
+  ###############################################################################
+  mssql:
+    image: mcr.microsoft.com/mssql/rhel/server:2019-latest
+    hostname: mssql
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=RxH4uloM!
+      - TZ=Africa/Gaborone
+    networks:
+      codeconnect-public:
+      default:
+    deploy:
+      placement:
+        constraints:
+          # Make the traefik service run only on the node with this label
+          # as the node with it has the volume for the certificates
+          - node.labels.codeconnect_mssql == true
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=codeconnect-public"
+        - "traefik.constraint-label=codeconnect-public"
+        - "traefik.tcp.routers.codeconnect-mssql.rule=HostSNI(`mssql.codeconnectdev.local`)"
+        - "traefik.tcp.routers.codeconnect-mssql.entrypoints=mssql"
+        - "traefik.tcp.routers.codeconnect-mssql.service=codeconnect-mssql"
+        - "traefik.tcp.routers.codeconnect-mssql.tls=true"
+        - "traefik.tcp.routers.codeconnect-mssql.tls.passthrough=true"
+        - "traefik.tcp.services.codeconnect-mssql.loadbalancer.server.port=1433"
+
+###############################################################################
+# Networks
+###############################################################################
+networks:
+  codeconnect-public:
+    external: true

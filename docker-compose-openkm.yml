@@ -1,0 +1,47 @@
+version: "3.9"
+services:
+  ###############################################################################
+  # OpenKM Document Management System
+  ###############################################################################
+  openkm:
+    image: openkm/openkm-ce:6.3.12
+    hostname: openkm
+    # healthcheck:
+    #  test: ["CMD", "curl", "--fail", "http://localhost:8080/health/ready"]
+    #  interval: 5s
+    #  timeout: 5s
+    #  retries: 3
+    #  start_period: 15s
+    volumes:
+      - ${CODECONNECT_DATA}/openkm/server.xml:/opt/tomcat/conf/server.xml
+      - ${CODECONNECT_DATA}/openkm/OpenKM.cfg:/opt/tomcat/OpenKM.cfg
+      - ${CODECONNECT_DATA}/openkm/repository:/opt/tomcat/repository
+    environment:
+      TZ: Africa/Gaborone
+    networks:
+      codeconnect-public:
+    deploy:
+      placement:
+        constraints:
+          # Make the traefik service run only on the node with this label
+          # as the node with it has the volume for the certificates
+          - node.labels.codeconnect_openkm == true
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=codeconnect-public"
+        - "traefik.constraint-label=codeconnect-public"
+        - "traefik.http.routers.openkm-http.rule=Host(`${OPENKM_DOMAIN}`)"
+        - "traefik.http.routers.openkm-http.entrypoints=web"
+        - "traefik.http.routers.openkm-http.middlewares=https-redirect"
+        - "traefik.http.services.openkm.loadbalancer.server.port=8080"
+        - "traefik.http.routers.openkm-https.entrypoints=${ACTIVE_ROUTER_ENTRY}"
+        - "traefik.http.routers.openkm-https.rule=Host(`${OPENKM_DOMAIN}`)"
+        - "traefik.http.routers.openkm-https.tls=${SSL_SECURE}"
+        - "traefik.http.routers.openkm-https.tls.certresolver=le"
+
+###############################################################################
+# Networks
+###############################################################################
+networks:
+  codeconnect-public:
+    external: true
